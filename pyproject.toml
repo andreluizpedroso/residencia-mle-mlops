@@ -18,6 +18,8 @@ dependencies = [
     "pydantic>=2.7.0",
     # Config
     "python-dotenv>=1.0.0",
+    # Dados
+    "kaggle>=1.6.0",
 ]
 
 [project.optional-dependencies]
