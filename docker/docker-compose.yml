@@ -54,7 +54,10 @@ services:
       "
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.15.1
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mlflow
+    image: mlops-mlflow:local
     container_name: mlops_mlflow
     depends_on:
       postgres:
