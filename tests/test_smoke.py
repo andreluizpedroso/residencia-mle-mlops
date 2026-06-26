@@ -2,15 +2,17 @@
 
 import importlib
 
+from packaging.version import Version
+
 
 def test_mlflow_importable() -> None:
     mlflow = importlib.import_module("mlflow")
-    assert mlflow.__version__ >= "2.15.0"
+    assert Version(mlflow.__version__) >= Version("2.15.0")
 
 
 def test_sklearn_importable() -> None:
     sklearn = importlib.import_module("sklearn")
-    assert sklearn.__version__ >= "1.5.0"
+    assert Version(sklearn.__version__) >= Version("1.5.0")
 
 
 def test_sample_transaction_schema(sample_transaction: dict) -> None:
