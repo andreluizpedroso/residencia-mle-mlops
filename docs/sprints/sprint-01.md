@@ -85,19 +85,19 @@ mlops-lab/
 
 **1. Diferença entre backend store e artifact store no MLflow:**
 
-*Resposta:*
+Backend store guarda metadados (runs, métricas, parâmetros, tags) — PostgreSQL. Artifact store guarda arquivos binários (modelos, plots, .pkl) — MinIO. Separação justificada: banco relacional é otimizado para writes frequentes e queries estruturadas; object storage é otimizado para arquivos grandes e acessos esporádicos.
 
 **2. `service_completed_successfully` vs `service_healthy` no Docker Compose:**
 
-*Resposta:*
+`service_healthy`: daemon rodando e saudável (PostgreSQL, MinIO). `service_completed_successfully`: container executou uma tarefa e encerrou com sucesso (minio-init). Padrão equivalente ao Init Container do Kubernetes.
 
 **3. O que muda ao migrar de MinIO para GCS:**
 
-*Resposta:*
+Remove `minio` e `minio-init` do docker-compose. Troca `MLFLOW_S3_ENDPOINT_URL` (removida), `AWS_ACCESS_KEY_ID/SECRET` → `GOOGLE_APPLICATION_CREDENTIALS`, `s3://` → `gs://` no `default-artifact-root`. PostgreSQL inalterado. Nenhuma linha de código de treinamento muda.
 
 **4. Por que separar deps de dev das de produção:**
 
-*Resposta:*
+Imagem Docker de produção fica menor, mais rápida no build e deploy, e com menor superfície de ataque (cada pacote extra é um CVE potencial). `pytest`, `ruff`, `mypy` nunca precisam estar em produção.
 
 ---
 
