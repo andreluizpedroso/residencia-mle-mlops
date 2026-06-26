@@ -1,0 +1,9 @@
+# Normaliza line endings para LF no repositório (padrão Linux/Mac/CI)
+* text=auto eol=lf
+
+# Binários — não alterar
+*.png binary
+*.jpg binary
+*.pkl binary
+*.joblib binary
+*.parquet binary

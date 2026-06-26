@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.uv/
+*.egg-info/
+dist/
+build/
+
+# Ambiente
+.env
+
+# Dados — nunca versionar dados brutos ou processados grandes
+data/raw/
+data/processed/
+*.csv
+*.parquet
+*.feather
+
+# Modelos — armazenados no MLflow/MinIO, não no git
+models/
+*.pkl
+*.joblib
+*.onnx
+
+# Notebooks — outputs podem ter dados sensíveis
+notebooks/.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# MLflow local (caso rode sem Docker)
+mlruns/
+mlartifacts/
