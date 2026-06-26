@@ -1,7 +1,7 @@
 # Sprint 1 — Setup do Ambiente e Fundamentos MLOps
 
 **Data:** 2026-06-26
-**Status:** Em andamento
+**Status:** Concluída ✅
 
 ---
 
@@ -103,16 +103,29 @@ Imagem Docker de produção fica menor, mais rápida no build e deploy, e com me
 
 ## Code Review
 
-> *(Preenchido ao final da sprint)*
-
-**Nota:** —/10
+**Nota: 7.5/10** (após correções aplicadas: 8.5/10)
 
 **Pontos positivos:**
+- Healthchecks e cadeia de dependências declarativa (`service_completed_successfully`)
+- Volumes nomeados com separação `down` vs `down-v`
+- `Dockerfile.mlflow` minimalista — extensão cirúrgica da imagem base
+- `pyproject.toml` como source of truth, separação prod/dev
+- `.gitattributes` para normalização de line endings cross-platform
 
-**Pontos de melhoria:**
+**Pontos corrigidos após code review:**
+- `minio/minio:latest` → pinado para `RELEASE.2025-09-07` (reprodutibilidade)
+- `mc anonymous set public` removido (segurança)
+- `.dockerignore` adicionado (não envia `.venv` ao Docker daemon)
+- Comparação de versão por string → `packaging.Version` (corretude)
 
 ---
 
 ## Perguntas de Entrevista
 
-> *(Preenchido ao final da sprint)*
+**Nota geral: 8.5/10**
+
+**Q1 — SQLite → PostgreSQL (8/10):** Problemas de concorrência e sequência de migração corretos. Gap: MLflow não tem migração nativa SQLite→Postgres, precisaria de `pgloader` ou ETL customizado.
+
+**Q2 — Alembic (8.5/10):** Entendimento do risco de race condition. Gap: a solução técnica é `pg_try_advisory_lock` + migrações como step separado no pipeline de deploy, nunca responsabilidade do servidor.
+
+**Q3 — Reprodutibilidade (9/10):** Resposta mais completa. Gap: MLflow captura git commit automaticamente (`mlflow.source.git.commit`); `mlflow.sklearn.log_model(pipeline)` serializa preprocessamento + modelo juntos eliminando drift de features.
