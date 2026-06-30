@@ -11,9 +11,10 @@ build/
 # Ambiente
 .env
 
-# Dados — nunca versionar dados brutos ou processados grandes
+# Dados — nunca versionar dados brutos, processados ou artefatos gerados
 data/raw/
 data/processed/
+data/artifacts/
 *.csv
 *.parquet
 *.feather
