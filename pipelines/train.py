@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import mlflow
 import mlflow.sklearn
 import numpy as np
+from mlflow.models import infer_signature
 import pandas as pd
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
@@ -131,9 +132,19 @@ def train_and_log(
 
         metrics = compute_metrics(y_test, y_pred, y_prob)
 
+        # Assinatura: schema de entrada (features) + saída (predições)
+        # Resolve o warning "Model logged without a signature"
+        signature = infer_signature(X_test, y_pred)
+        input_example = X_test.head(5)
+
         mlflow.log_params({"model_type": name, **model.get_params()})  # type: ignore[union-attr]
         mlflow.log_metrics(metrics)
-        mlflow.sklearn.log_model(model, artifact_path="model")
+        mlflow.sklearn.log_model(
+            model,
+            artifact_path="model",
+            signature=signature,
+            input_example=input_example,
+        )
 
         cm_path = save_confusion_matrix(y_test, y_pred, name)
         mlflow.log_artifact(str(cm_path), artifact_path="plots")
