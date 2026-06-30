@@ -23,11 +23,12 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 # Força UTF-8 no terminal do Windows (evita erro com emojis do MLflow)
 os.environ.setdefault("PYTHONUTF8", "1")
 
-import mlflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
+import mlflow
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ def report_class_balance(df: pd.DataFrame) -> dict[str, float]:
     """Calcula e exibe o desbalanceamento de classes."""
     counts = df["Class"].value_counts()
     fraud_pct = counts[1] / len(df) * 100
-    print(f"\nDistribuição de classes:")
+    print("\nDistribuição de classes:")
     print(f"  Legítimas : {counts[0]:,} ({100 - fraud_pct:.2f}%)")
     print(f"  Fraudes   : {counts[1]:,} ({fraud_pct:.4f}%)")
     return {"fraud_pct": round(fraud_pct, 4), "total_samples": len(df)}
@@ -160,7 +161,7 @@ def main() -> None:
         run_id = mlflow.active_run().info.run_id  # type: ignore[union-attr]
         print(f"\nMLflow run_id : {run_id}")
         print(f"Experimento   : {EXPERIMENT_NAME}")
-        print(f"\nAcesse: http://localhost:5000")
+        print("\nAcesse: http://localhost:5000")
 
     print("\nFeature engineering concluído.")
 

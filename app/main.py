@@ -16,17 +16,18 @@ import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 os.environ.setdefault("PYTHONUTF8", "1")
 
-import mlflow
 import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 
+import mlflow
 from app.schemas import HealthResponse, PredictionResponse, Transaction
 
 # ── Configuração ──────────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ MODEL_NAME = "fraud-detector"
 MODEL_ALIAS = "champion"
 MODEL_URI = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
 
-ml_models: dict[str, object] = {}
+ml_models: dict[str, Any] = {}
 
 
 # ── Ciclo de vida da aplicação ───────────────────────────────────────────────
@@ -84,7 +85,7 @@ def predict(transaction: Transaction) -> PredictionResponse:
         raise HTTPException(status_code=503, detail="Modelo nao carregado.")
 
     df = pd.DataFrame([transaction.model_dump()])
-    probability = float(model.predict_proba(df)[0, 1])  # type: ignore[union-attr]
+    probability = float(model.predict_proba(df)[0, 1])
 
     return PredictionResponse(
         is_fraud=probability >= 0.5,

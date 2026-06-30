@@ -20,12 +20,13 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / ".env")
 os.environ.setdefault("PYTHONUTF8", "1")
 
-import mlflow
 import mlflow.sklearn
 import pandas as pd
 from mlflow.entities import Run
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
+
+import mlflow
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ def find_best_run(client: MlflowClient) -> Run:
         raise ValueError("Nenhum run encontrado. Execute pipelines/train.py primeiro.")
 
     best = runs[0]
-    print(f"Melhor run encontrado:")
+    print("Melhor run encontrado:")
     print(f"  run_id     : {best.info.run_id}")
     print(f"  model_type : {best.data.params.get('model_type', 'N/A')}")
     print(f"  {METRIC}   : {best.data.metrics.get(METRIC, 0):.4f}")
@@ -104,7 +105,7 @@ def promote(client: MlflowClient, version: str) -> None:
 
 def validate(model_name: str) -> None:
     """Carrega o modelo do registry pelo alias e confirma que prediz corretamente."""
-    print(f"\nValidando modelo carregado do registry...")
+    print("\nValidando modelo carregado do registry...")
     model = mlflow.sklearn.load_model(f"models:/{model_name}@champion")
 
     test = pd.read_parquet(PROCESSED_DIR / "test.parquet")
@@ -136,7 +137,7 @@ def main() -> None:
     validate(MODEL_NAME)
 
     print(f"\nModelo '{MODEL_NAME}' versao {mv.version} promovido para champion.")
-    print(f"Carregue em qualquer script com:")
+    print("Carregue em qualquer script com:")
     print(f"  mlflow.sklearn.load_model('models:/{MODEL_NAME}@champion')")
     print(f"\nAcesse: http://localhost:5000/#/models/{MODEL_NAME}")
 

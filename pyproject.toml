@@ -30,6 +30,7 @@ dev = [
     "ruff>=0.5.0",
     "mypy>=1.10.0",
     "pandas-stubs>=2.2.0",
+    "httpx>=0.27.0",  # exigido pelo fastapi.testclient.TestClient
 ]
 
 [tool.ruff]
@@ -40,17 +41,26 @@ target-version = "py311"
 select = ["E", "F", "W", "I", "UP", "B", "C4", "PTH"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# load_dotenv() precisa rodar antes de importar mlflow/boto3 — essas libs lêem
+# variáveis de ambiente (credenciais, endpoint S3) no momento do import.
+"app/main.py" = ["E402"]
+"pipelines/train.py" = ["E402"]
+"pipelines/register_model.py" = ["E402"]
+"pipelines/feature_engineering.py" = ["E402"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["app", "pipelines"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+pythonpath = ["."]
 
 [tool.coverage.run]
 source = ["app", "pipelines"]

@@ -1,4 +1,40 @@
+from collections.abc import Iterator
+
+import numpy as np
 import pytest
+from fastapi.testclient import TestClient
+
+
+class FakeModel:
+    """Substitui o Pipeline real nos testes — sem precisar do MLflow vivo."""
+
+    def __init__(self, fraud_probability: float = 0.0) -> None:
+        self.fraud_probability = fraud_probability
+
+    def predict_proba(self, X: object) -> np.ndarray:
+        return np.array([[1 - self.fraud_probability, self.fraud_probability]])
+
+
+@pytest.fixture
+def api_client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    """Client de teste com o modelo real substituído por um FakeModel legítimo."""
+    monkeypatch.setattr("app.main.mlflow.sklearn.load_model", lambda uri: FakeModel())
+    from app.main import app
+
+    with TestClient(app) as client:
+        yield client
+
+
+@pytest.fixture
+def fraud_api_client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    """Client de teste com o FakeModel sempre prevendo fraude (probability=0.99)."""
+    monkeypatch.setattr(
+        "app.main.mlflow.sklearn.load_model", lambda uri: FakeModel(fraud_probability=0.99)
+    )
+    from app.main import app
+
+    with TestClient(app) as client:
+        yield client
 
 
 @pytest.fixture(scope="session")
@@ -36,3 +72,9 @@ def sample_transaction() -> dict:
         "V28": -0.021053,
         "Amount": 149.62,
     }
+
+
+@pytest.fixture
+def api_payload(sample_transaction: dict) -> dict:
+    """Mesma transação, sem 'Time' — o schema Transaction da API não conhece esse campo."""
+    return {key: value for key, value in sample_transaction.items() if key != "Time"}

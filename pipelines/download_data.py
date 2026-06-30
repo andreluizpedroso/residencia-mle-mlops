@@ -9,7 +9,7 @@ import hashlib
 import os
 from pathlib import Path
 
-import kaggle  # type: ignore[import-untyped]
+import kaggle
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ EXPECTED_MD5 = "e90efcb83d69faf99fcab8b0255024de"
 def _md5(path: Path) -> str:
     """Calcula o hash MD5 de um arquivo em blocos (não carrega tudo na memória)."""
     h = hashlib.md5()
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return h.hexdigest()

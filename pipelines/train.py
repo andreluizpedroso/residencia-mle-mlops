@@ -19,10 +19,10 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 os.environ.setdefault("PYTHONUTF8", "1")
 
 import matplotlib
+
 matplotlib.use("Agg")  # sem display — funciona em CI e Docker
 
 import matplotlib.pyplot as plt
-import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
@@ -44,6 +44,8 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
+import mlflow
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
@@ -159,8 +161,8 @@ def train_and_log(
         pipeline = build_pipeline(classifier)
         pipeline.fit(X_train, y_train)
 
-        y_pred: np.ndarray = pipeline.predict(X_test)  # type: ignore[assignment]
-        y_prob: np.ndarray = pipeline.predict_proba(X_test)[:, 1]  # type: ignore[union-attr]
+        y_pred: np.ndarray = pipeline.predict(X_test)
+        y_prob: np.ndarray = pipeline.predict_proba(X_test)[:, 1]
 
         metrics = compute_metrics(y_test, y_pred, y_prob)
 
@@ -184,7 +186,7 @@ def train_and_log(
         for metric_name, value in metrics.items():
             print(f"  {metric_name} : {value:.4f}")
 
-        return run.info.run_id
+        return str(run.info.run_id)
 
 
 # ── Orquestração ──────────────────────────────────────────────────────────────
