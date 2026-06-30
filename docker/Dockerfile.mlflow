@@ -3,3 +3,9 @@ FROM ghcr.io/mlflow/mlflow:v2.15.1
 # psycopg2-binary: driver PostgreSQL (não incluído na imagem base do MLflow)
 # boto3: cliente S3/MinIO para o artifact store
 RUN pip install --no-cache-dir psycopg2-binary boto3
+
+# curl: usado pelo healthcheck do docker-compose para checar /health.
+# Sem isso o container roda normal mas o compose nunca o marca como healthy,
+# o que trava qualquer serviço com "depends_on: mlflow: service_healthy".
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*

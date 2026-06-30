@@ -1,6 +1,11 @@
 """
 Pipeline de treinamento: treina classificadores e rastreia experimentos no MLflow.
 
+O pré-processamento (escala do Amount) é embutido DENTRO do Pipeline logado —
+não é uma etapa separada feita antes do treino. Isso evita o problema de
+"train/serve skew": o artefato do MLflow recebe a transação em formato bruto
+(Amount em reais) e escala internamente, exatamente como a API vai enviar.
+
 Uso:
     uv run python pipelines/train.py
 """
@@ -20,9 +25,10 @@ import matplotlib.pyplot as plt
 import mlflow
 import mlflow.sklearn
 import numpy as np
-from mlflow.models import infer_signature
 import pandas as pd
+from mlflow.models import infer_signature
 from sklearn.base import ClassifierMixin
+from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -35,18 +41,23 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
-PROCESSED_DIR = Path(__file__).parent.parent / "data" / "processed"
+RAW_FILE = Path(__file__).parent.parent / "data" / "raw" / "creditcard.csv"
 PLOTS_DIR = Path(__file__).parent.parent / "data" / "artifacts"
 MLFLOW_TRACKING_URI = "http://localhost:5000"
 EXPERIMENT_NAME = "fraud-detection-training"
 RANDOM_STATE = 42
+TEST_SIZE = 0.2  # mesmo split da Sprint 2 — garante comparabilidade dos runs
 TARGET = "Class"
 
-# Dois modelos para comparar no mesmo experimento MLflow
-MODELS: dict[str, ClassifierMixin] = {
+# Dois classificadores para comparar no mesmo experimento MLflow.
+# Cada um é embutido em um Pipeline próprio em train_and_log().
+CLASSIFIERS: dict[str, ClassifierMixin] = {
     "logistic_regression": LogisticRegression(
         class_weight="balanced",  # penaliza erros em fraude proporcionalmente
         max_iter=1000,
@@ -65,18 +76,38 @@ MODELS: dict[str, ClassifierMixin] = {
 # ── Funções ───────────────────────────────────────────────────────────────────
 
 def load_data() -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
-    """Carrega os dados processados pela feature engineering."""
-    train = pd.read_parquet(PROCESSED_DIR / "train.parquet")
-    test = pd.read_parquet(PROCESSED_DIR / "test.parquet")
+    """Carrega o CSV bruto e reproduz o split da Sprint 2 (Amount sem escalar)."""
+    df = pd.read_csv(RAW_FILE).drop(columns=["Time"])
+    X = df.drop(columns=[TARGET])
+    y = df[TARGET]
 
-    X_train = train.drop(columns=[TARGET])
-    y_train = train[TARGET]
-    X_test = test.drop(columns=[TARGET])
-    y_test = test[TARGET]
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=y,
+    )
 
     print(f"Treino : {X_train.shape[0]:,} amostras | {X_train.shape[1]} features")
     print(f"Teste  : {X_test.shape[0]:,} amostras")
     return X_train, y_train, X_test, y_test
+
+
+def build_pipeline(classifier: ClassifierMixin) -> Pipeline:
+    """Empacota pré-processamento + classificador em um único artefato.
+
+    V1-V28 já são componentes PCA — passam direto (passthrough).
+    Amount é a única feature em escala real — normalizada pelo StandardScaler.
+    O Pipeline completo é o que será logado e servido pela API (Sprint 5).
+    """
+    preprocessor = ColumnTransformer(
+        transformers=[("scale_amount", StandardScaler(), ["Amount"])],
+        remainder="passthrough",
+    )
+    return Pipeline([
+        ("preprocessor", preprocessor),
+        ("classifier", classifier),
+    ])
 
 
 def compute_metrics(
@@ -115,32 +146,32 @@ def save_confusion_matrix(
 
 def train_and_log(
     name: str,
-    model: ClassifierMixin,
+    classifier: ClassifierMixin,
     X_train: pd.DataFrame,
     y_train: pd.Series,
     X_test: pd.DataFrame,
     y_test: pd.Series,
 ) -> str:
-    """Treina um modelo e loga params, métricas e artefatos no MLflow."""
+    """Treina um Pipeline (preprocessor + classificador) e loga tudo no MLflow."""
     print(f"\n[{name}] Treinando...")
 
     with mlflow.start_run(run_name=name) as run:
-        model.fit(X_train, y_train)
+        pipeline = build_pipeline(classifier)
+        pipeline.fit(X_train, y_train)
 
-        y_pred: np.ndarray = model.predict(X_test)  # type: ignore[assignment]
-        y_prob: np.ndarray = model.predict_proba(X_test)[:, 1]  # type: ignore[union-attr]
+        y_pred: np.ndarray = pipeline.predict(X_test)  # type: ignore[assignment]
+        y_prob: np.ndarray = pipeline.predict_proba(X_test)[:, 1]  # type: ignore[union-attr]
 
         metrics = compute_metrics(y_test, y_pred, y_prob)
 
-        # Assinatura: schema de entrada (features) + saída (predições)
-        # Resolve o warning "Model logged without a signature"
+        # Assinatura: schema de entrada (features brutas) + saída (predições)
         signature = infer_signature(X_test, y_pred)
         input_example = X_test.head(5)
 
-        mlflow.log_params({"model_type": name, **model.get_params()})  # type: ignore[union-attr]
+        mlflow.log_params({"model_type": name, **classifier.get_params()})
         mlflow.log_metrics(metrics)
         mlflow.sklearn.log_model(
-            model,
+            pipeline,
             artifact_path="model",
             signature=signature,
             input_example=input_example,
@@ -169,8 +200,8 @@ def main() -> None:
     X_train, y_train, X_test, y_test = load_data()
 
     run_ids: dict[str, str] = {}
-    for name, model in MODELS.items():
-        run_id = train_and_log(name, model, X_train, y_train, X_test, y_test)
+    for name, classifier in CLASSIFIERS.items():
+        run_id = train_and_log(name, classifier, X_train, y_train, X_test, y_test)
         run_ids[name] = run_id
 
     print("\nRuns gerados:")

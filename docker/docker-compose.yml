@@ -81,6 +81,30 @@ services:
       timeout: 10s
       retries: 5
 
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    image: mlops-api:local
+    container_name: mlops_api
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      # "localhost" no .env é para uso fora do Docker — aqui sobrescrevemos
+      # com o nome do serviço na rede do compose.
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin_secret}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
 volumes:
   postgres_data:
   minio_data:

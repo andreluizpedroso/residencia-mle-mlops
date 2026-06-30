@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+# curl: usado pelo healthcheck do docker-compose para checar /health
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# uv: mesmo gerenciador de pacotes usado em dev — garante que o container
+# instala exatamente as versões travadas no uv.lock.
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /usr/local/bin/
+
+WORKDIR /app
+
+# Copia primeiro só os manifests para cachear a camada de instalação de deps.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Agora copia o código — só invalida a camada acima se app/ ou pipelines/ mudarem.
+COPY app/ ./app/
+COPY pipelines/ ./pipelines/
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
