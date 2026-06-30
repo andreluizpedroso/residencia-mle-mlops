@@ -10,6 +10,9 @@ Uso (local):
 
 Docs interativas:
     http://localhost:8000/docs
+
+Métricas Prometheus:
+    http://localhost:8000/metrics
 """
 
 import os
@@ -26,6 +29,8 @@ os.environ.setdefault("PYTHONUTF8", "1")
 import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from prometheus_client import Counter
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import mlflow
 from app.schemas import HealthResponse, PredictionResponse, Transaction
@@ -40,6 +45,16 @@ MODEL_ALIAS = "champion"
 MODEL_URI = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
 
 ml_models: dict[str, Any] = {}
+
+# ── Métricas customizadas de negócio ─────────────────────────────────────────
+
+# Contador de predições separado por resultado — métrica de negócio que
+# nenhuma biblioteca genérica consegue gerar automaticamente.
+FRAUD_COUNTER = Counter(
+    "fraud_api_predictions_total",
+    "Contagem de predições classificadas por resultado",
+    ["result"],  # "fraud" ou "legitimate"
+)
 
 
 # ── Ciclo de vida da aplicação ───────────────────────────────────────────────
@@ -64,6 +79,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Instrumentação automática: latência, throughput e tamanho de requisição/resposta.
+# /metrics é excluído do tracking para não poluir as métricas com auto-scrapes.
+Instrumentator(
+    should_group_status_codes=True,
+    excluded_handlers=["/metrics"],
+).instrument(app).expose(app)
+
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
@@ -86,9 +108,13 @@ def predict(transaction: Transaction) -> PredictionResponse:
 
     df = pd.DataFrame([transaction.model_dump()])
     probability = float(model.predict_proba(df)[0, 1])
+    is_fraud = probability >= 0.5
+
+    # Incrementa o contador de negócio — visível no Grafana como taxa de fraude.
+    FRAUD_COUNTER.labels(result="fraud" if is_fraud else "legitimate").inc()
 
     return PredictionResponse(
-        is_fraud=probability >= 0.5,
+        is_fraud=is_fraud,
         fraud_probability=round(probability, 4),
         model_alias=MODEL_ALIAS,
     )

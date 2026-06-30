@@ -21,6 +21,9 @@ dependencies = [
     # Dados
     "kaggle>=1.6.0",
     "matplotlib>=3.9.0",
+    # Observabilidade (Sprint 7+)
+    "prometheus-fastapi-instrumentator>=7.0.0",
+    "prometheus-client>=0.20.0",
 ]
 
 [project.optional-dependencies]

@@ -1,6 +1,6 @@
 # mlops-lab — Credit Card Fraud Detection
 
-![Sprint](https://img.shields.io/badge/Sprint-6%2F12-blueviolet)
+![Sprint](https://img.shields.io/badge/Sprint-7%2F12-blueviolet)
 ![CI](https://github.com/andreluizpedroso/residencia-mle-mlops/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![MLflow](https://img.shields.io/badge/MLflow-2.15-0194E2?logo=mlflow&logoColor=white)
@@ -57,7 +57,8 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 4 | Model Registry + versionamento com aliases | ✅ Concluída |
 | 5 | FastAPI serving + Docker + correção de train/serve skew | ✅ Concluída |
 | 6 | CI/CD com GitHub Actions + pytest | ✅ Concluída |
-| 7 | Observabilidade: Prometheus + Grafana | 🔜 Próxima |
+| 7 | Observabilidade: Prometheus + Grafana | ✅ Concluída |
+| 8 | Data Drift + Model Drift (Evidently AI) | 🔜 Próxima |
 | 8 | Data Drift + Model Drift (Evidently AI) | ⏳ Pendente |
 | 9 | Feature Store (Feast) | ⏳ Pendente |
 | 10 | Kubernetes (Kind) | ⏳ Pendente |
@@ -118,7 +119,9 @@ uv run uvicorn app.main:app --port 8000
 | MLflow UI | http://localhost:5000 | Experimentos, runs, métricas, Model Registry |
 | MinIO Console | http://localhost:9001 | Artefatos: modelos, plots, arquivos |
 | API docs (Swagger) | http://localhost:8000/docs | Endpoints interativos da API de fraude |
-| API ReDoc | http://localhost:8000/redoc | Documentação alternativa da API |
+| API Métricas | http://localhost:8000/metrics | Endpoint Prometheus (latência, throughput, fraude) |
+| Prometheus | http://localhost:9090 | Banco de séries temporais — queries PromQL |
+| Grafana | http://localhost:3000 | Dashboards operacionais e de negócio (admin/admin) |
 
 ---
 
