@@ -10,6 +10,8 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![MinIO](https://img.shields.io/badge/MinIO-S3--compatible-C72E49?logo=minio&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-v3.4-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-12.0-F46800?logo=grafana&logoColor=white)
 ![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)
 ![Pytest](https://img.shields.io/badge/pytest-8.2-0A9EDC?logo=pytest&logoColor=white)
 ![Ruff](https://img.shields.io/badge/Ruff-lint%2Fformat-D7FF64?logo=ruff&logoColor=black)
@@ -27,22 +29,34 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 ## Arquitetura local
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Docker Compose                        │
-│                                                         │
-│  ┌───────────┐   ┌───────────┐   ┌───────────────────┐ │
-│  │ PostgreSQL│   │   MinIO   │   │  MLflow Server    │ │
-│  │  :5432    │◄──│  :9000    │◄──│     :5000         │ │
-│  │ (backend  │   │ (artifact │   │ (experiments +    │ │
-│  │  store)   │   │  store)   │   │  model registry)  │ │
-│  └───────────┘   └───────────┘   └───────────────────┘ │
-│                                          ▲              │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │         FastAPI — Fraud Detection API  :8000       │ │
-│  │  GET  /health   → status + modelo carregado        │ │
-│  │  POST /predict  → { is_fraud, fraud_probability }  │ │
-│  └────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        Docker Compose                            │
+│                                                                  │
+│  ┌───────────┐  ┌───────────┐  ┌──────────────────────────────┐ │
+│  │ PostgreSQL│  │   MinIO   │  │       MLflow Server          │ │
+│  │  :5432    │◄─│  :9000    │◄─│          :5000               │ │
+│  │ (backend  │  │ (artifact │  │  (experiments + registry)    │ │
+│  │  store)   │  │  store)   │  └──────────────────────────────┘ │
+│  └───────────┘  └───────────┘              ▲                    │
+│                                            │                    │
+│  ┌─────────────────────────────────────────┴────────────────┐   │
+│  │              FastAPI — Fraud Detection API  :8000         │   │
+│  │  GET  /health    → status + modelo carregado             │   │
+│  │  POST /predict   → { is_fraud, fraud_probability }       │   │
+│  │  GET  /metrics   → métricas Prometheus                   │   │
+│  └────────────────────────────┬─────────────────────────────┘   │
+│                               │ scrape /metrics a cada 15s      │
+│  ┌────────────────────────────▼───────────┐                     │
+│  │         Prometheus  :9090              │                     │
+│  │  (séries temporais: latência,          │                     │
+│  │   throughput, taxa de fraude)          │                     │
+│  └────────────────────────────┬───────────┘                     │
+│                               │ PromQL                          │
+│  ┌────────────────────────────▼───────────┐                     │
+│  │         Grafana  :3000                 │                     │
+│  │  (dashboard: req/s, p99, fraud rate)   │                     │
+│  └────────────────────────────────────────┘                     │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -59,7 +73,6 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 6 | CI/CD com GitHub Actions + pytest | ✅ Concluída |
 | 7 | Observabilidade: Prometheus + Grafana | ✅ Concluída |
 | 8 | Data Drift + Model Drift (Evidently AI) | 🔜 Próxima |
-| 8 | Data Drift + Model Drift (Evidently AI) | ⏳ Pendente |
 | 9 | Feature Store (Feast) | ⏳ Pendente |
 | 10 | Kubernetes (Kind) | ⏳ Pendente |
 | 11 | Retraining automático (Airflow) | ⏳ Pendente |
@@ -81,7 +94,7 @@ cp .env.example .env
 uv sync --extra dev
 ```
 
-### 2. Subir a stack local
+### 2. Subir a stack completa
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d
@@ -105,9 +118,6 @@ uv run python pipelines/train.py
 
 # Registrar e promover o melhor modelo
 uv run python pipelines/register_model.py
-
-# Servir a API (local, fora do Docker)
-uv run uvicorn app.main:app --port 8000
 ```
 
 ---
@@ -118,10 +128,10 @@ uv run uvicorn app.main:app --port 8000
 |-----------|-----|-----------|
 | MLflow UI | http://localhost:5000 | Experimentos, runs, métricas, Model Registry |
 | MinIO Console | http://localhost:9001 | Artefatos: modelos, plots, arquivos |
-| API docs (Swagger) | http://localhost:8000/docs | Endpoints interativos da API de fraude |
+| API docs (Swagger) | http://localhost:8000/docs | Endpoints interativos com exemplo de payload |
 | API Métricas | http://localhost:8000/metrics | Endpoint Prometheus (latência, throughput, fraude) |
 | Prometheus | http://localhost:9090 | Banco de séries temporais — queries PromQL |
-| Grafana | http://localhost:3000 | Dashboards operacionais e de negócio (admin/admin) |
+| Grafana | http://localhost:3000 | Dashboards operacionais e de negócio (`admin` / `admin`) |
 
 ---
 
@@ -130,16 +140,12 @@ uv run uvicorn app.main:app --port 8000
 ### `GET /health`
 
 ```json
-{
-  "status": "ok",
-  "model_loaded": true,
-  "model_alias": "champion"
-}
+{ "status": "ok", "model_loaded": true, "model_alias": "champion" }
 ```
 
 ### `POST /predict`
 
-**Request:** transação com features `V1`–`V28` (componentes PCA) + `Amount` em valor bruto (reais/dólares).
+**Request:** transação com features `V1`–`V28` (componentes PCA) + `Amount` em valor bruto.
 
 ```bash
 curl -X POST http://localhost:8000/predict \
@@ -150,14 +156,25 @@ curl -X POST http://localhost:8000/predict \
 **Response:**
 
 ```json
-{
-  "is_fraud": false,
-  "fraud_probability": 0.0012,
-  "model_alias": "champion"
-}
+{ "is_fraud": false, "fraud_probability": 0.0012, "model_alias": "champion" }
 ```
 
 O modelo carregado é sempre o `fraud-detector@champion` do MLflow Model Registry. Para trocar o modelo em produção, basta mover o alias — sem redeploy de código.
+
+---
+
+## Observabilidade
+
+O dashboard **Fraud Detection API** no Grafana (`Dashboards → MLOps`) exibe:
+
+| Painel | O que mede |
+|--------|------------|
+| Requisições / segundo | Taxa de chegada de tráfego |
+| Taxa de Erros 5xx | Proporção de respostas com erro de servidor |
+| Taxa de Fraude Detectada | % de transações classificadas como fraude (métrica de negócio) |
+| Latência p50 / p90 / p99 | Distribuição de tempo de resposta — p99 = pior caso do 1% mais lento |
+| Requisições por endpoint | Volume separado por rota e status HTTP |
+| Fraude vs Legítima | Tendência temporal das duas categorias de predição |
 
 ---
 
@@ -165,7 +182,7 @@ O modelo carregado é sempre o `fraud-detector@champion` do MLflow Model Registr
 
 ```bash
 # Infraestrutura
-make up           # Sobe MLflow + PostgreSQL + MinIO
+make up           # Sobe a stack completa (MLflow + MinIO + API + Prometheus + Grafana)
 make down         # Para os containers
 make logs         # Acompanha logs em tempo real
 make ps           # Status dos containers
@@ -191,33 +208,36 @@ make help         # lista todos os comandos
 
 ```
 mlops-lab/
-├── app/                   # FastAPI — model serving
-│   ├── main.py            #   lifespan, /health, /predict
-│   └── schemas.py         #   contratos Pydantic (Transaction, PredictionResponse)
-├── pipelines/             # Scripts standalone
-│   ├── download_data.py   #   ingestão do dataset (Kaggle)
-│   ├── feature_engineering.py  # pré-processamento + split
-│   ├── train.py           #   treinamento com sklearn Pipeline + MLflow tracking
-│   └── register_model.py  #   registro e promoção no Model Registry
-├── tests/                 # pytest
-│   ├── conftest.py        #   fixtures: FakeModel, api_client
-│   ├── test_smoke.py      #   imports e versões mínimas
-│   └── test_api.py        #   testes de /health e /predict
-├── docker/                # Containerização
-│   ├── docker-compose.yml #   stack completa: postgres + minio + mlflow + api
-│   ├── Dockerfile.mlflow  #   imagem customizada do MLflow
-│   └── Dockerfile.api     #   imagem da FastAPI (uv sync --frozen)
-├── docs/sprints/          # Documentação por sprint
-│   ├── sprint-01.md ... sprint-06.md
+├── app/                        # FastAPI — model serving
+│   ├── main.py                 #   lifespan, /health, /predict, /metrics
+│   └── schemas.py              #   contratos Pydantic (Transaction, PredictionResponse)
+├── pipelines/                  # Scripts standalone
+│   ├── download_data.py        #   ingestão do dataset (Kaggle)
+│   ├── feature_engineering.py  #   pré-processamento + split
+│   ├── train.py                #   treinamento com sklearn Pipeline + MLflow tracking
+│   └── register_model.py       #   registro e promoção no Model Registry
+├── monitoring/                 # Observabilidade
+│   ├── prometheus.yml          #   config de scrape (job: fraud-api → :8000/metrics)
+│   └── grafana/
+│       ├── provisioning/       #   datasource + dashboard provider (auto-carregados)
+│       └── dashboards/         #   fraud_api.json — 6 painéis PromQL
+├── tests/                      # pytest
+│   ├── conftest.py             #   fixtures: FakeModel, api_client
+│   ├── test_smoke.py           #   imports e versões mínimas
+│   └── test_api.py             #   testes de /health e /predict (sem MLflow real)
+├── docker/                     # Containerização
+│   ├── docker-compose.yml      #   stack: postgres+minio+mlflow+api+prometheus+grafana
+│   ├── Dockerfile.mlflow       #   imagem customizada do MLflow
+│   └── Dockerfile.api          #   imagem da FastAPI (uv sync --frozen)
+├── docs/sprints/               # Documentação por sprint
+│   └── sprint-01.md … sprint-07.md
 ├── .github/workflows/
-│   └── ci.yml             # CI: lint + mypy + pytest + docker build
-├── data/                  # Dados (gitignored)
-│   ├── raw/               #   creditcard.csv original
-│   └── processed/         #   train.parquet / test.parquet
-├── pyproject.toml         # Dependências + config de ferramentas
-├── uv.lock                # Lockfile reproduzível
-├── Makefile               # Atalhos de dev
-└── .env.example           # Template de variáveis de ambiente
+│   └── ci.yml                  # CI: lint + mypy + pytest + docker build
+├── data/                       # Dados (gitignored)
+├── pyproject.toml              # Dependências + config de ferramentas
+├── uv.lock                     # Lockfile reproduzível
+├── Makefile                    # Atalhos de dev
+└── .env.example                # Template de variáveis de ambiente
 ```
 
 ---

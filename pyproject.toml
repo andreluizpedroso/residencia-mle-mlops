@@ -24,6 +24,8 @@ dependencies = [
     # Observabilidade (Sprint 7+)
     "prometheus-fastapi-instrumentator>=7.0.0",
     "prometheus-client>=0.20.0",
+    # Drift detection (Sprint 8+)
+    "evidently>=0.4.0",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +53,7 @@ ignore = ["E501"]
 "pipelines/train.py" = ["E402"]
 "pipelines/register_model.py" = ["E402"]
 "pipelines/feature_engineering.py" = ["E402"]
+"pipelines/detect_drift.py" = ["E402"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "pipelines"]
