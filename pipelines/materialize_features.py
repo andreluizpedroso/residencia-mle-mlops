@@ -13,7 +13,7 @@ Uso:
 
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -50,7 +50,7 @@ def prepare_feast_data(raw_path: Path, output_dir: Path) -> Path:
     df["transaction_id"] = range(n)
 
     # Simula 1 ano de transações com timestamps retroativos
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     step = timedelta(seconds=int(365 * 24 * 3600 / n))
     start = now - timedelta(days=365)
     df["event_timestamp"] = [start + step * i for i in range(n)]
@@ -70,7 +70,7 @@ def apply_and_materialize(feature_store_dir: Path) -> None:
     store.apply([transaction, transaction_features])
     print("Definições de features aplicadas.")
 
-    end = datetime.now(tz=timezone.utc)
+    end = datetime.now(tz=UTC)
     start = end - timedelta(days=366)
     store.materialize(start_date=start, end_date=end)
     print("Features materializadas para o online store.")
