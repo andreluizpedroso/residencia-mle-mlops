@@ -43,3 +43,6 @@ htmlcov/
 # MLflow local (caso rode sem Docker)
 mlruns/
 mlartifacts/
+
+# Material de divulgação — não faz parte do projeto
+docs/linkedin/
