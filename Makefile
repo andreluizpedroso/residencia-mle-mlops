@@ -1,4 +1,6 @@
-.PHONY: up down logs test lint format check install
+.PHONY: up down logs test lint format check install \
+        k8s-create k8s-deploy k8s-delete k8s-status \
+        airflow-up airflow-down
 
 COMPOSE_FILE := docker/docker-compose.yml
 ENV_FILE     := .env
@@ -54,3 +56,40 @@ env: ## Cria .env a partir do template (não sobrescreve se já existir)
 help: ## Lista todos os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+# ── Kubernetes (Kind) ────────────────────────────────────────────────────────
+
+k8s-create: ## Cria o cluster Kind local
+	kind create cluster --config deployment/kind-cluster.yaml
+
+k8s-deploy: ## Faz build, carrega imagem e aplica manifests no Kind
+	docker build -f docker/Dockerfile.api -t mlops-api:local .
+	kind load docker-image mlops-api:local --name fraud-detection
+	kubectl apply -f deployment/k8s/namespace.yaml
+	kubectl apply -f deployment/k8s/api-configmap.yaml
+	kubectl apply -f deployment/k8s/api-secret.yaml
+	kubectl apply -f deployment/k8s/api-deployment.yaml
+	kubectl apply -f deployment/k8s/api-service.yaml
+	kubectl apply -f deployment/k8s/api-hpa.yaml
+	@echo ""
+	@echo "  API → http://localhost:8080/docs"
+	@echo ""
+
+k8s-status: ## Mostra status dos pods no namespace fraud-detection
+	kubectl get pods,svc,hpa -n fraud-detection
+
+k8s-delete: ## Remove o cluster Kind
+	kind delete cluster --name fraud-detection
+
+# ── Airflow ──────────────────────────────────────────────────────────────────
+
+AIRFLOW_COMPOSE := docker/docker-compose-airflow.yml
+
+airflow-up: ## Sobe o Airflow (webserver + scheduler + postgres)
+	docker compose -f $(AIRFLOW_COMPOSE) up -d
+	@echo ""
+	@echo "  Airflow UI → http://localhost:8081  (admin / admin)"
+	@echo ""
+
+airflow-down: ## Para o Airflow
+	docker compose -f $(AIRFLOW_COMPOSE) down

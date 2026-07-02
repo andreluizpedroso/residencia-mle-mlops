@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: fraud-detection
+data:
+  # host.docker.internal permite que o pod Kind acesse serviços
+  # rodando no Docker Compose do host
+  MLFLOW_TRACKING_URI: "http://host.docker.internal:5000"
+  MLFLOW_S3_ENDPOINT_URL: "http://host.docker.internal:9000"
+  PYTHONUTF8: "1"
