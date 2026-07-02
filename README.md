@@ -1,6 +1,6 @@
 # mlops-lab — Credit Card Fraud Detection
 
-![Sprint](https://img.shields.io/badge/Sprint-7%2F12-blueviolet)
+![Sprint](https://img.shields.io/badge/Sprint-9%2F12-blueviolet)
 ![CI](https://github.com/andreluizpedroso/residencia-mle-mlops/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![MLflow](https://img.shields.io/badge/MLflow-2.15-0194E2?logo=mlflow&logoColor=white)
@@ -12,6 +12,8 @@
 ![MinIO](https://img.shields.io/badge/MinIO-S3--compatible-C72E49?logo=minio&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-v3.4-E6522C?logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-12.0-F46800?logo=grafana&logoColor=white)
+![Evidently](https://img.shields.io/badge/Evidently-0.7-6A4C93?logoColor=white)
+![Feast](https://img.shields.io/badge/Feast-0.64-FF6B35?logoColor=white)
 ![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)
 ![Pytest](https://img.shields.io/badge/pytest-8.2-0A9EDC?logo=pytest&logoColor=white)
 ![Ruff](https://img.shields.io/badge/Ruff-lint%2Fformat-D7FF64?logo=ruff&logoColor=black)
@@ -72,9 +74,9 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 5 | FastAPI serving + Docker + correção de train/serve skew | ✅ Concluída |
 | 6 | CI/CD com GitHub Actions + pytest | ✅ Concluída |
 | 7 | Observabilidade: Prometheus + Grafana | ✅ Concluída |
-| 8 | Data Drift + Model Drift (Evidently AI) | 🔜 Próxima |
-| 9 | Feature Store (Feast) | ⏳ Pendente |
-| 10 | Kubernetes (Kind) | ⏳ Pendente |
+| 8 | Data Drift + Model Drift (Evidently AI) | ✅ Concluída |
+| 9 | Feature Store (Feast) | ✅ Concluída |
+| 10 | Kubernetes (Kind) | 🔜 Próxima |
 | 11 | Retraining automático (Airflow) | ⏳ Pendente |
 | 12 | Migração para GCP (fase cloud) | ⏳ Pendente |
 
@@ -229,8 +231,11 @@ mlops-lab/
 │   ├── docker-compose.yml      #   stack: postgres+minio+mlflow+api+prometheus+grafana
 │   ├── Dockerfile.mlflow       #   imagem customizada do MLflow
 │   └── Dockerfile.api          #   imagem da FastAPI (uv sync --frozen)
+├── feature_store/              # Feature Store (Feast)
+│   ├── feature_store.yaml      #   config do projeto (offline=Parquet, online=SQLite)
+│   └── features.py             #   entidade + FeatureView (V1-V28, Amount, Class)
 ├── docs/sprints/               # Documentação por sprint
-│   └── sprint-01.md … sprint-07.md
+│   └── sprint-01.md … sprint-09.md
 ├── .github/workflows/
 │   └── ci.yml                  # CI: lint + mypy + pytest + docker build
 ├── data/                       # Dados (gitignored)
