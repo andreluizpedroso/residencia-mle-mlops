@@ -1,6 +1,6 @@
 # mlops-lab — Credit Card Fraud Detection
 
-![Sprint](https://img.shields.io/badge/Sprint-9%2F12-blueviolet)
+![Sprint](https://img.shields.io/badge/Sprint-11%2F12-blueviolet)
 ![CI](https://github.com/andreluizpedroso/residencia-mle-mlops/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![MLflow](https://img.shields.io/badge/MLflow-2.15-0194E2?logo=mlflow&logoColor=white)
@@ -14,6 +14,8 @@
 ![Grafana](https://img.shields.io/badge/Grafana-12.0-F46800?logo=grafana&logoColor=white)
 ![Evidently](https://img.shields.io/badge/Evidently-0.7-6A4C93?logoColor=white)
 ![Feast](https://img.shields.io/badge/Feast-0.64-FF6B35?logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?logo=kubernetes&logoColor=white)
+![Airflow](https://img.shields.io/badge/Apache%20Airflow-2.10-017CEE?logo=apacheairflow&logoColor=white)
 ![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)
 ![Pytest](https://img.shields.io/badge/pytest-8.2-0A9EDC?logo=pytest&logoColor=white)
 ![Ruff](https://img.shields.io/badge/Ruff-lint%2Fformat-D7FF64?logo=ruff&logoColor=black)
@@ -76,9 +78,9 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 7 | Observabilidade: Prometheus + Grafana | ✅ Concluída |
 | 8 | Data Drift + Model Drift (Evidently AI) | ✅ Concluída |
 | 9 | Feature Store (Feast) | ✅ Concluída |
-| 10 | Kubernetes (Kind) | 🔜 Próxima |
-| 11 | Retraining automático (Airflow) | ⏳ Pendente |
-| 12 | Migração para GCP (fase cloud) | ⏳ Pendente |
+| 10 | Kubernetes (Kind) — deploy declarativo, HPA, health probes | ✅ Concluída |
+| 11 | Retraining automático (Airflow) — DAG semanal drift→retrain | ✅ Concluída |
+| 12 | Migração para GCP (fase cloud) | ⏳ Próxima |
 
 ---
 
@@ -202,6 +204,16 @@ make test-cov     # pytest com relatório de cobertura
 make install      # uv sync --extra dev
 make env          # cria .env a partir do .env.example
 make help         # lista todos os comandos
+
+# Kubernetes (Kind) — Sprint 10
+make k8s-create   # cria cluster Kind local
+make k8s-deploy   # build + load imagem + aplica manifests
+make k8s-status   # status dos pods/svc/hpa
+make k8s-delete   # remove o cluster
+
+# Airflow — Sprint 11
+make airflow-up   # sobe webserver + scheduler + postgres
+make airflow-down # para o Airflow
 ```
 
 ---
@@ -234,8 +246,14 @@ mlops-lab/
 ├── feature_store/              # Feature Store (Feast)
 │   ├── feature_store.yaml      #   config do projeto (offline=Parquet, online=SQLite)
 │   └── features.py             #   entidade + FeatureView (V1-V28, Amount, Class)
+├── deployment/                 # Kubernetes (Sprint 10)
+│   ├── kind-cluster.yaml       #   cluster Kind com port-mapping :30800→:8080
+│   └── k8s/                    #   manifests: namespace, configmap, secret, deploy, svc, hpa
+├── airflow/                    # Apache Airflow (Sprint 11)
+│   └── dags/
+│       └── fraud_retraining_dag.py  # DAG semanal: drift→branch→retrain→register
 ├── docs/sprints/               # Documentação por sprint
-│   └── sprint-01.md … sprint-09.md
+│   └── sprint-01.md … sprint-11.md
 ├── .github/workflows/
 │   └── ci.yml                  # CI: lint + mypy + pytest + docker build
 ├── data/                       # Dados (gitignored)
