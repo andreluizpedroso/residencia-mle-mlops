@@ -132,10 +132,13 @@ uv run python pipelines/register_model.py
 |-----------|-----|-----------|
 | MLflow UI | http://localhost:5000 | Experimentos, runs, métricas, Model Registry |
 | MinIO Console | http://localhost:9001 | Artefatos: modelos, plots, arquivos |
+| MinIO API (S3) | http://localhost:9000 | Endpoint S3-compatível usado pelo MLflow |
 | API docs (Swagger) | http://localhost:8000/docs | Endpoints interativos com exemplo de payload |
 | API Métricas | http://localhost:8000/metrics | Endpoint Prometheus (latência, throughput, fraude) |
 | Prometheus | http://localhost:9090 | Banco de séries temporais — queries PromQL |
 | Grafana | http://localhost:3000 | Dashboards operacionais e de negócio (`admin` / `admin`) |
+| API via Kubernetes | http://localhost:8080 | Mesma API servida pelo cluster Kind (Sprint 10) |
+| Airflow UI | http://localhost:8081 | DAGs, execuções e logs (`admin` / `admin`) (Sprint 11) |
 
 ---
 
