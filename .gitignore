@@ -35,14 +35,44 @@ notebooks/.ipynb_checkpoints/
 .DS_Store
 Thumbs.db
 
-# Coverage
+# Coverage e type checking
 .coverage
 htmlcov/
 .pytest_cache/
+.mypy_cache/
 
 # MLflow local (caso rode sem Docker)
 mlruns/
 mlartifacts/
 
-# Material de divulgação — não faz parte do projeto
+# Airflow — logs e banco local gerados em runtime
+airflow/logs/
+airflow/*.db
+
+# Feast — artefatos gerados (registry, online store, parquet de features)
+data/feast/
+
+# Evidently — relatórios de drift gerados em runtime
+*.html
+*.json
+!pyproject.toml
+!**/docker-compose*.yml
+
+# Bancos SQLite gerados localmente
+*.db
+*.sqlite
+
+# Artefatos de treinamento gerados localmente (plots, confusion matrix)
+data/artifacts/
+
+# Logs genéricos
+*.log
+
+# Segredos e certificados — nunca versionar
+*.pem
+*.key
+secrets/
+
+# Material de divulgação e entrevistas — não faz parte do projeto
 docs/linkedin/
+docs/interview-guide.html
