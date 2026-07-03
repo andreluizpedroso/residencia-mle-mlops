@@ -230,25 +230,30 @@ mlops-lab/
 │   └── schemas.py              #   contratos Pydantic (Transaction, PredictionResponse)
 ├── pipelines/                  # Scripts standalone
 │   ├── download_data.py        #   ingestão do dataset (Kaggle)
-│   ├── feature_engineering.py  #   pré-processamento + split
+│   ├── feature_engineering.py  #   pré-processamento + split 80/20
 │   ├── train.py                #   treinamento com sklearn Pipeline + MLflow tracking
-│   └── register_model.py       #   registro e promoção no Model Registry
+│   ├── register_model.py       #   registro e promoção no Model Registry
+│   ├── detect_drift.py         #   detecção de data drift com Evidently AI (Sprint 8)
+│   └── materialize_features.py #   materialização de features no Feast (Sprint 9)
 ├── monitoring/                 # Observabilidade
 │   ├── prometheus.yml          #   config de scrape (job: fraud-api → :8000/metrics)
 │   └── grafana/
 │       ├── provisioning/       #   datasource + dashboard provider (auto-carregados)
 │       └── dashboards/         #   fraud_api.json — 6 painéis PromQL
 ├── tests/                      # pytest
-│   ├── conftest.py             #   fixtures: FakeModel, api_client
+│   ├── conftest.py             #   fixtures: FakeModel, api_client, fraud_api_client
 │   ├── test_smoke.py           #   imports e versões mínimas
-│   └── test_api.py             #   testes de /health e /predict (sem MLflow real)
+│   ├── test_api.py             #   testes de /health e /predict (sem MLflow real)
+│   ├── test_drift.py           #   testes de detecção de drift (Sprint 8)
+│   └── test_features.py        #   testes de materialização Feast (Sprint 9)
 ├── docker/                     # Containerização
-│   ├── docker-compose.yml      #   stack: postgres+minio+mlflow+api+prometheus+grafana
+│   ├── docker-compose.yml      #   stack principal: postgres+minio+mlflow+api+prometheus+grafana
+│   ├── docker-compose-airflow.yml  # stack Airflow separada (Sprint 11)
 │   ├── Dockerfile.mlflow       #   imagem customizada do MLflow
 │   └── Dockerfile.api          #   imagem da FastAPI (uv sync --frozen)
-├── feature_store/              # Feature Store (Feast)
+├── feature_store/              # Feature Store (Feast) — Sprint 9
 │   ├── feature_store.yaml      #   config do projeto (offline=Parquet, online=SQLite)
-│   └── features.py             #   entidade + FeatureView (V1-V28, Amount, Class)
+│   └── features.py             #   entidade + FeatureView (V1-V28, Amount)
 ├── deployment/                 # Kubernetes (Sprint 10)
 │   ├── kind-cluster.yaml       #   cluster Kind com port-mapping :30800→:8080
 │   └── k8s/                    #   manifests: namespace, configmap, secret, deploy, svc, hpa
@@ -259,7 +264,7 @@ mlops-lab/
 │   └── sprint-01.md … sprint-11.md
 ├── .github/workflows/
 │   └── ci.yml                  # CI: lint + mypy + pytest + docker build
-├── data/                       # Dados (gitignored)
+├── data/                       # Dados gerados em runtime (gitignored)
 ├── pyproject.toml              # Dependências + config de ferramentas
 ├── uv.lock                     # Lockfile reproduzível
 ├── Makefile                    # Atalhos de dev
