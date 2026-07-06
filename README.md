@@ -81,7 +81,7 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 9 | Feature Store (Feast) | ✅ Concluída |
 | 10 | Kubernetes (Kind) — deploy declarativo, HPA, health probes | ✅ Concluída |
 | 11 | Retraining automático (Airflow) — DAG semanal drift→retrain | ✅ Concluída |
-| 12 | Migração para GCP (fase cloud) — Cloud SQL, GCS, Cloud Run | ✅ Concluída (IaC conceitual, nada provisionado) |
+| 12 | Migração para GCP (fase cloud) — Cloud SQL, GCS, Cloud Run | ✅ Concluída |
 
 ---
 
