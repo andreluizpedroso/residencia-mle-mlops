@@ -1,6 +1,6 @@
 # mlops-lab — Credit Card Fraud Detection
 
-![Sprint](https://img.shields.io/badge/Sprint-11%2F12-blueviolet)
+![Sprint](https://img.shields.io/badge/Sprint-12%2F12-success)
 ![CI](https://github.com/andreluizpedroso/residencia-mle-mlops/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![MLflow](https://img.shields.io/badge/MLflow-2.15-0194E2?logo=mlflow&logoColor=white)
@@ -16,6 +16,7 @@
 ![Feast](https://img.shields.io/badge/Feast-0.64-FF6B35?logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?logo=kubernetes&logoColor=white)
 ![Airflow](https://img.shields.io/badge/Apache%20Airflow-2.10-017CEE?logo=apacheairflow&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-GCP%20IaC%20only-844FBA?logo=terraform&logoColor=white)
 ![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?logo=uv&logoColor=white)
 ![Pytest](https://img.shields.io/badge/pytest-8.2-0A9EDC?logo=pytest&logoColor=white)
 ![Ruff](https://img.shields.io/badge/Ruff-lint%2Fformat-D7FF64?logo=ruff&logoColor=black)
@@ -80,7 +81,21 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 9 | Feature Store (Feast) | ✅ Concluída |
 | 10 | Kubernetes (Kind) — deploy declarativo, HPA, health probes | ✅ Concluída |
 | 11 | Retraining automático (Airflow) — DAG semanal drift→retrain | ✅ Concluída |
-| 12 | Migração para GCP (fase cloud) | ⏳ Próxima |
+| 12 | Migração para GCP (fase cloud) — Cloud SQL, GCS, Cloud Run | ✅ Concluída (IaC conceitual, nada provisionado) |
+
+---
+
+## Cloud (Sprint 12)
+
+Sprint 12 escreveu, em Terraform, o mapeamento completo da stack local para GCP — **sem provisionar nenhum recurso real** (decisão explícita para não gerar custo). Cloud SQL não tem tier "always free" permanente, diferente de Cloud Run e GCS, então o sprint inteiro ficou como exercício de arquitetura: código revisado linha a linha, `terraform apply` nunca executado.
+
+| Componente local | Componente GCP | Arquivo |
+|---|---|---|
+| `postgres` (container) | Cloud SQL | `deployment/gcp/cloud_sql.tf` |
+| `minio` (container, S3-compatible) | Cloud Storage | `deployment/gcp/gcs.tf` |
+| Containers Docker / manifests Kind (Sprint 10) | Cloud Run | `deployment/gcp/cloud_run.tf` |
+
+Detalhes, diagramas e trade-offs (por que Cloud Run em vez de reaproveitar os manifests do Sprint 10 num GKE) em [`docs/sprints/sprint-12.md`](docs/sprints/sprint-12.md).
 
 ---
 
@@ -260,8 +275,12 @@ mlops-lab/
 ├── airflow/                    # Apache Airflow (Sprint 11)
 │   └── dags/
 │       └── fraud_retraining_dag.py  # DAG semanal: drift→branch→retrain→register
+├── deployment/gcp/              # Terraform GCP (Sprint 12) — IaC conceitual, nunca aplicado
+│   ├── cloud_sql.tf             #   Postgres → Cloud SQL
+│   ├── gcs.tf                   #   MinIO → Cloud Storage
+│   └── cloud_run.tf             #   containers/Kind → Cloud Run
 ├── docs/sprints/               # Documentação por sprint
-│   └── sprint-01.md … sprint-11.md
+│   └── sprint-01.md … sprint-12.md
 ├── .github/workflows/
 │   └── ci.yml                  # CI: lint + mypy + pytest + docker build
 ├── data/                       # Dados gerados em runtime (gitignored)
