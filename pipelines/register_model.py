@@ -20,13 +20,12 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / ".env")
 os.environ.setdefault("PYTHONUTF8", "1")
 
+import mlflow
 import mlflow.sklearn
 import pandas as pd
 from mlflow.entities import Run
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
-
-import mlflow
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 

@@ -26,13 +26,13 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / ".env")
 os.environ.setdefault("PYTHONUTF8", "1")
 
+import mlflow
 import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from prometheus_client import Counter
 from prometheus_fastapi_instrumentator import Instrumentator
 
-import mlflow
 from app.schemas import HealthResponse, PredictionResponse, Transaction
 
 # ── Configuração ──────────────────────────────────────────────────────────────

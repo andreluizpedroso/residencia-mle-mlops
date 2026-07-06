@@ -23,12 +23,11 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 # Força UTF-8 no terminal do Windows (evita erro com emojis do MLflow)
 os.environ.setdefault("PYTHONUTF8", "1")
 
+import mlflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-
-import mlflow
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
