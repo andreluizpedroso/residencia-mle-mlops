@@ -1,6 +1,6 @@
 .PHONY: up down logs test lint format check install \
         k8s-create k8s-deploy k8s-delete k8s-status \
-        airflow-up airflow-down
+        airflow-up airflow-down notebooks
 
 COMPOSE_FILE := docker/docker-compose.yml
 ENV_FILE     := .env
@@ -80,6 +80,13 @@ k8s-status: ## Mostra status dos pods no namespace fraud-detection
 
 k8s-delete: ## Remove o cluster Kind
 	kind delete cluster --name fraud-detection
+
+# ── Notebooks ────────────────────────────────────────────────────────────────
+
+notebooks: ## Instala deps de notebooks (+ dev), registra o kernel do projeto e abre o JupyterLab
+	uv sync --extra dev --extra notebooks
+	uv run python -m ipykernel install --sys-prefix --name mlops-lab --display-name "mlops-lab (uv)" --env PYTHONUTF8 1
+	uv run jupyter lab notebooks/
 
 # ── Airflow ──────────────────────────────────────────────────────────────────
 
