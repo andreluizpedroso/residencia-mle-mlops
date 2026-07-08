@@ -282,7 +282,7 @@ mlops-lab/
 ├── docs/sprints/               # Documentação por sprint
 │   └── sprint-01.md … sprint-12.md
 ├── .github/workflows/
-│   └── ci.yml                  # CI: lint + mypy + pytest + docker build
+│   └── ci.yml                  # CI: lint + mypy + pytest + docker build; CD: push da imagem pro GHCR (main)
 ├── data/                       # Dados gerados em runtime (gitignored)
 ├── pyproject.toml              # Dependências + config de ferramentas
 ├── uv.lock                     # Lockfile reproduzível
@@ -316,5 +316,13 @@ Todo push e PR na `main` dispara automaticamente:
 2. **Type check** — `mypy app pipelines`
 3. **Testes** — `pytest --cov` (8 testes, ~4s, sem infraestrutura externa)
 4. **Docker build** — valida que `Dockerfile.api` compila sem erros
+
+Em push direto para `main` (não em PRs), um quinto job publica a imagem em produção:
+
+5. **Docker publish** — build + push para o GitHub Container Registry, sem depender de conta cloud nem gerar custo:
+   ```
+   ghcr.io/andreluizpedroso/residencia-mle-mlops-api:latest
+   ghcr.io/andreluizpedroso/residencia-mle-mlops-api:<sha do commit>
+   ```
 
 Status atual: ![CI](https://github.com/andreluizpedroso/residencia-mle-mlops/actions/workflows/ci.yml/badge.svg)
