@@ -83,6 +83,19 @@ Transações fraudulentas representam menos de **0,17%** do dataset (284.807 tra
 | 11 | Retraining automático (Airflow) — DAG semanal drift→retrain | ✅ Concluída |
 | 12 | Migração para GCP (fase cloud) — Cloud SQL, GCS, Cloud Run | ✅ Concluída |
 
+### Fase 2 — Laboratório contínuo
+
+O projeto continua como laboratório de atualização: um sprint por vez, cada um encaixando uma prática nova na stack que já roda.
+
+| Sprint | Tema | Status |
+|--------|------|--------|
+| 13 | Champion/Challenger + gradient boosting (LightGBM/XGBoost), promoção por custo de negócio | 📋 Planejada |
+| 14 | Agente de incidentes: LLM lê Prometheus + Evidently e escreve o relatório de drift | 📋 Planejada |
+| 15 | O lab como servidor MCP (consultar e agir no sistema em linguagem natural) | 📋 Planejada |
+| 16 | Evals e observabilidade de LLM (golden set, LLM-as-judge, tracing, gate no CI) | 📋 Planejada |
+| 17 | Serving em escala: shadow, canary e rollback automático no Kubernetes | 📋 Planejada |
+| 18 | Deploy real no GCP com custo controlado (opcional) | 📋 Planejada |
+
 ---
 
 ## Cloud (Sprint 12)
@@ -280,7 +293,7 @@ mlops-lab/
 │   ├── gcs.tf                   #   MinIO → Cloud Storage
 │   └── cloud_run.tf             #   containers/Kind → Cloud Run
 ├── docs/sprints/               # Documentação por sprint
-│   └── sprint-01.md … sprint-12.md
+│   └── sprint-01.md … sprint-18.md   # 13–18: fase 2, planejadas
 ├── .github/workflows/
 │   └── ci.yml                  # CI: lint + mypy + pytest + docker build; CD: push da imagem pro GHCR (main)
 ├── data/                       # Dados gerados em runtime (gitignored)
